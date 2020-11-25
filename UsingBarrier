@@ -1,0 +1,80 @@
+import UIKit
+import Foundation
+class Lcs {
+    init() {
+        let arr = SynArray<Int>()
+        for i in 1...1000 {
+            DispatchQueue.global(qos: .background).async {
+                arr.append(i)
+            }
+            
+            DispatchQueue.global(qos: .background).async {
+                arr.insertAt(100, i)
+            }
+            
+        }
+        print(arr.getArray())
+    }
+}
+
+class SynArray<T> {
+    private var arr = [T]()
+    var queue = DispatchQueue(label: "SyncArray",  attributes: .concurrent)
+    
+    func append(_ element:T) {
+        queue.async(flags: .barrier) {
+            self.arr.append(element)
+        }
+    }
+    
+    func insertAt(_ ele:T, _ index:Int){
+        queue.async(flags: .barrier) {
+            self.arr.insert(ele, at: index)
+        }
+    }
+    
+    func first() -> T? {
+        var el : T?
+        queue.sync(flags: .barrier) {
+            el = self.arr.first
+        }
+        return el
+    }
+    
+    func removeLast() {
+        queue.async(flags: .barrier) {
+            self.arr.removeLast()
+        }
+    }
+    
+    func removeAt(_ index:Int){
+        queue.async(flags: .barrier) {
+            self.arr.remove(at: index)
+        }
+    }
+        
+    func last() -> T? {
+        var el : T?
+        queue.sync(flags: .barrier) {
+            el = self.arr.last
+        }
+        return el
+    }
+    
+    func `subscript`(_ index:Int) -> T? {
+        var el : T?
+        queue.sync(flags: .barrier){
+            el = self.arr[index]
+        }
+        return el
+    }
+    
+    func getArray() -> [T] {
+        var a = [T]()
+        queue.sync(flags: .barrier) {
+            a = self.arr
+        }
+        return a
+    }
+}
+
